@@ -108,3 +108,7 @@ Install package dependencies, development dependencies, and the nrfcredstore its
 Running the tests depends on a [development installation](#development-installation).
 
     poetry run pytest
+
+Check coverage
+
+    poetry run pytest --cov=. tests
