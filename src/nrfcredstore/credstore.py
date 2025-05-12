@@ -27,7 +27,7 @@ class Credential:
         self.sha = sha
 
 def is_ok(response_lines):
-    return not any("ERROR" in line for line in response_lines)
+    return not any("ERROR" in line for line in response_lines) 
 
 class CredStore:
     def __init__(self, at_client):
