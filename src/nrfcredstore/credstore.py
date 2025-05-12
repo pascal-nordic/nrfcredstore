@@ -26,9 +26,6 @@ class Credential:
         self.type = CredType(type)
         self.sha = sha
 
-def is_ok(response_lines):
-    return not any("ERROR" in line for line in response_lines) 
-
 class CredStore:
     def __init__(self, at_client):
         self.at_client = at_client
@@ -80,7 +77,7 @@ class CredStore:
         if type == CredType.ANY:
             raise ValueError
         cert = file.read().rstrip()
-        return is_ok(self.at_client.at_command(f'AT%CMNG=0,{tag},{type.value},"{cert}"'))
+        return self.at_client.at_command(f'AT%CMNG=0,{tag},{type.value},"{cert}"')
 
     def delete(self, tag: int, type: CredType):
         """Delete a credential from the modem
@@ -90,7 +87,7 @@ class CredStore:
 
         if type == CredType.ANY:
             raise ValueError
-        return is_ok(self.at_client.at_command(f'AT%CMNG=3,{tag},{type.value}'))
+        return self.at_client.at_command(f'AT%CMNG=3,{tag},{type.value}')
 
     def keygen(self, tag: int, file: io.BufferedIOBase, attributes: str = ''):
         """Generate a new private key and return a certificate signing request in DER format"""

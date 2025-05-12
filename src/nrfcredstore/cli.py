@@ -89,8 +89,6 @@ def exec_cmd(args, credstore):
         ct = CredType[args.type]
         if credstore.delete(args.tag, ct):
             print(f'{ct.name} in secure tag {args.tag} deleted')
-        else:
-            raise RuntimeError('delete failed')
     elif args.subcommand=='generate':
         credstore.keygen(args.tag, args.file, args.attributes)
         print(f'New private key generated in secure tag {args.tag}')

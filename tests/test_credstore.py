@@ -107,7 +107,8 @@ class TestCredStore:
             cred_store.list()
 
     def test_delete_success(self, cred_store, ok_resp):
-        assert cred_store.delete(567890, CredType(1))
+        response = cred_store.delete(567890, CredType(1))
+        assert len(response) == 0
         self.at_client.at_command.assert_called_with('AT%CMNG=3,567890,1')
 
     def test_delete_fail(self, cred_store, at_error):
@@ -123,7 +124,8 @@ class TestCredStore:
 dGVzdA==
 -----END CERTIFICATE-----'''
         fake_file = io.StringIO(cert_text)
-        assert cred_store.write(567890, CredType.CLIENT_KEY, fake_file)
+        response = cred_store.write(567890, CredType.CLIENT_KEY, fake_file)
+        assert len(response) == 0
         self.at_client.at_command.assert_called_with(f'AT%CMNG=0,567890,2,"{cert_text}"')
 
     def test_write_fail(self, cred_store, at_error):
