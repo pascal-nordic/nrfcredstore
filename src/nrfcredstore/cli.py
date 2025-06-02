@@ -53,6 +53,8 @@ def parse_args(in_args):
     delete_parser.add_argument('type', choices=KEY_TYPES,
         help='Key type to delete')
 
+    deleteall_parser = subparsers.add_parser('deleteall', help='Delete all keys in a secure tag')
+
     # add generate command and args
     generate_parser = subparsers.add_parser('generate', help='Generate private key')
     generate_parser.add_argument('tag', type=int,
@@ -89,6 +91,15 @@ def exec_cmd(args, credstore):
         ct = CredType[args.type]
         if credstore.delete(args.tag, ct):
             print(f'{ct.name} in secure tag {args.tag} deleted')
+    elif args.subcommand=='deleteall':
+        creds = credstore.list(None, CredType.ANY)
+        if not creds:
+            raise RuntimeError(f'No keys found in secure tag {args.tag}')
+        for c in creds:
+            if c.tag in [4294967292, 4294967293, 4294967294]:
+                continue  # Skip reserved tags
+            credstore.delete(c.tag, c.type)
+        print(f'All credentials deleted.')
     elif args.subcommand=='generate':
         credstore.keygen(args.tag, args.file, args.attributes)
         print(f'New private key generated in secure tag {args.tag}')
