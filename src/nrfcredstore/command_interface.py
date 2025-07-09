@@ -111,6 +111,8 @@ class ATCommandInterface(CredentialCommandInterface):
     def at_command(self, at_command: str, wait_for_result=False, suppress_errors=False):
         """Write an AT command to the command interface. Optionally wait for OK"""
 
+        self.comms.reset_input_buffer()
+
         if self.shell:
             # Transform line endings to match shell expectations
             at_command = at_command.replace("\r", "")
@@ -133,12 +135,14 @@ class ATCommandInterface(CredentialCommandInterface):
 
     def check_credential_exists(self, sectag: int, cred_type: int, get_hash=True):
         self.at_command(f'AT%CMNG=1,{sectag},{cred_type}')
-        retval, res = self.comms.expect_response("OK", "ERROR", "%CMNG")
-        if retval and res:
+        retval, output = self.comms.expect_response("OK", "ERROR", "%CMNG: ")
+        # get the last line of the response
+        output = [x.strip() for x in output.split("\n") if x.strip()][-1]
+        if retval and output:
             if not get_hash:
                 return True, None
             else:
-                return True, self._parse_sha(res)
+                return True, self._parse_sha(output)
 
         return False, None
 
@@ -152,6 +156,8 @@ class ATCommandInterface(CredentialCommandInterface):
     def get_imei(self):
         self.at_command('AT+CGSN')
         retval, output = self.comms.expect_response("OK", "ERROR", "")
+        # get the last line of the response
+        output = [x.strip() for x in output.split("\n") if x.strip()][-1]
         if not retval:
             return None
         return output[:IMEI_LEN]
@@ -159,6 +165,8 @@ class ATCommandInterface(CredentialCommandInterface):
     def get_model_id(self):
         self.at_command('AT+CGMM')
         retval, output = self.comms.expect_response("OK", "ERROR", "")
+        # get the last line of the response
+        output = [x.strip() for x in output.split("\n") if x.strip()][-1]
         if not retval:
             return None
         return output
@@ -166,6 +174,8 @@ class ATCommandInterface(CredentialCommandInterface):
     def get_mfw_version(self):
         self.at_command('AT+CGMR')
         retval, output = self.comms.expect_response("OK", "ERROR", "")
+        # get the last line of the response
+        output = [x.strip() for x in output.split("\n") if x.strip()][-1]
         if not retval:
             return None
         return output
