@@ -97,7 +97,7 @@ class ATCommandInterface(CredentialCommandInterface):
         for cmd, shell_mode in [("at AT+CGSN", True), ("AT+CGSN", False)]:
             for _ in range(3):
                 self.write_raw(cmd)
-                result, output = self.comms.expect_response("OK", "ERROR", "", suppress_errors=True, timeout=1)
+                result, output = self.comms.expect_response("OK", "ERROR", "", suppress_errors=True, timeout=2)
                 if result and len(re.findall("[0-9]{15}", output)) > 0:
                     self.set_shell_mode(shell_mode)
                     return
