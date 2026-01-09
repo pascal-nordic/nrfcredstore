@@ -323,7 +323,12 @@ class Comms:
                 if error_str and error_str == line:
                     return (False, output)
                 if line.startswith('+CME ERROR'):
-                    code = int(line.replace('+CME ERROR: ', ''))
+                    # Parse error code if present, otherwise use -1 for unknown
+                    try:
+                        code_str = line.replace('+CME ERROR:', '').strip()
+                        code = int(code_str) if code_str else -1
+                    except ValueError:
+                        code = -1
                     if not suppress_errors:
                         logging.error(f'AT command error: {ERR_CODE_TO_MSG.get(code, "Unknown error")}')
                     return (False, output)

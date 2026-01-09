@@ -14,6 +14,20 @@ import hashlib
 import coloredlogs, logging
 import re
 from typing import List, Tuple, Optional
+import sys
+import serial
+
+serial_busy_msg = (
+    "Port is busy or disconnected. Please ensure no other program is using the serial port."
+)
+        
+timeout_msg = (
+    "Unable to communicate with device. Please check that:\n"
+    "- The correct serial port is selected\n"
+    "- Your project has one of these two options enabled:\n"
+    "  * AT Host Library (CONFIG_AT_HOST_LIBRARY)\n"
+    "  * AT Shell (CONFIG_AT_SHELL)"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -93,15 +107,23 @@ class ATCommandInterface(CredentialCommandInterface):
         self.shell = shell
 
     def detect_shell_mode(self):
-        """Detect if the device is in shell mode or not."""
-        for cmd, shell_mode in [("at AT+CGSN", True), ("AT+CGSN", False)]:
-            for _ in range(3):
-                self.write_raw(cmd)
-                result, output = self.comms.expect_response("OK", "ERROR", "", suppress_errors=True, timeout=2)
-                if result and len(re.findall("[0-9]{15}", output)) > 0:
-                    self.set_shell_mode(shell_mode)
-                    return
-        raise TimeoutError("Failed to detect shell mode. Device does not respond to AT commands.")
+        """Detect if the device is in shell mode or not. """
+        try:
+            for cmd, shell_mode in [("at AT+CGSN", True), ("AT+CGSN", False)]:
+                for _ in range(3):
+                    self.write_raw(cmd)
+                    result, output = self.comms.expect_response("OK", "ERROR", "", suppress_errors=True, timeout=2)
+                    if result and len(re.findall("[0-9]{15}", output)) > 0:
+                        self.set_shell_mode(shell_mode)
+                        return
+        except serial.SerialException as e:
+            # Port is busy or disconnected (likely due to multiple access)
+            logger.error(serial_busy_msg)
+            sys.exit(13)  # ERR_SERIAL
+        
+        # Timeout: no valid response received
+        logger.error(timeout_msg)
+        sys.exit(12)  # ERR_TIMEOUT
 
     def enable_error_codes(self):
         """Enable error codes in the AT client"""
